@@ -1,39 +1,120 @@
-
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
-html {
-  @include mat.theme((
-    color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
+@include mat.core();
+
+$rosa-palette: (
+  50:  #FBEAF0,
+  100: #F4C0D1,
+  200: #ED93B1,
+  300: #E2658F,
+  400: #D9446F,
+  500: #D4537E,
+  600: #C03870,
+  700: #993556,
+  800: #72243E,
+  900: #4B1528,
+  contrast: (
+    50:  #3a2a1a, 100: #3a2a1a, 200: #3a2a1a,
+    300: #fff, 400: #fff, 500: #fff,
+    600: #fff, 700: #fff, 800: #fff, 900: #fff,
+  )
+);
+
+$marrom-palette: (
+  50:  #FAEEDA,
+  100: #FAC775,
+  200: #EF9F27,
+  300: #D08010,
+  400: #BA7517,
+  500: #854F0B,
+  600: #633806,
+  700: #412402,
+  contrast: (
+    50:  #3a2a1a, 100: #3a2a1a, 200: #3a2a1a,
+    300: #fff, 400: #fff, 500: #fff, 600: #fff, 700: #fff,
+  )
+);
+
+$primary: mat.define-palette($rosa-palette, 500, 100, 700);
+$accent:  mat.define-palette($marrom-palette, 200, 50, 500);
+$warn:    mat.define-palette(mat.$red-palette);
+
+$theme: mat.define-light-theme((
+  color: (primary: $primary, accent: $accent, warn: $warn),
+  density: 0,
+));
+
+@include mat.all-component-themes($theme);
+
+:root {
+  --rosa:         #D4537E;
+  --rosa-claro:   #FBEAF0;
+  --rosa-medio:   #F4C0D1;
+  --marrom:       #854F0B;
+  --marrom-claro: #FAEEDA;
+  --marrom-medio: #FAC775;
+  --creme:        #F9F5F0;
+  --sidebar-bg:   #3a2010;
+  --text-dark:    #3a2a1a;
+  --text-muted:   #8a7060;
+  --border:       #e8ddd5;
+  --sidebar-w:    220px;
+  --topbar-h:     64px;
 }
 
-body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
+html, body {
+  height: 100%;
+  font-family: 'Georgia', serif;
+  background: var(--creme);
+  color: var(--text-dark);
 }
-/* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.page-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  border: 0.5px solid var(--border);
+  padding: 18px;
+}
+
+.card-title {
+  font-family: sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.card-sub {
+  font-family: sans-serif;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: sans-serif;
+
+  &.pendente   { background: #FAEEDA; color: #854F0B; }
+  &.confirmado { background: #E6F1FB; color: #185FA5; }
+  &.producao   { background: #FBEAF0; color: #993556; }
+  &.entregue   { background: #eaf3de; color: #3B6D11; }
+  &.cancelado  { background: #f5f5f5; color: #666; }
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }

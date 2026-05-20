@@ -1,0 +1,53 @@
+<div class="shell">
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="logo-icon">🍬</div>
+      <div class="logo-text" *ngIf="!sidebarCollapsed">
+        Delícias de Marias
+        <span class="logo-sub">Gestão de vendas</span>
+      </div>
+    </div>
+
+    <button class="hamburger" (click)="toggleSidebar()" aria-label="Alternar menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <nav class="nav">
+      <div class="nav-section" *ngIf="!sidebarCollapsed">Principal</div>
+
+      <a class="nav-item" routerLink="/dashboard" routerLinkActive="active" matRipple>
+        <mat-icon>dashboard</mat-icon>
+        <span class="nav-label">Dashboard</span>
+      </a>
+
+      <a class="nav-item" routerLink="/kanban" routerLinkActive="active" matRipple>
+        <mat-icon>view_kanban</mat-icon>
+        <span class="nav-label">Kanban</span>
+      </a>
+
+      <div class="nav-section" *ngIf="!sidebarCollapsed">Cadastros</div>
+
+      <a class="nav-item" routerLink="/encomendas" routerLinkActive="active" matRipple>
+        <mat-icon>assignment</mat-icon>
+        <span class="nav-label">Encomendas</span>
+      </a>
+
+      <a class="nav-item" routerLink="/vendas" routerLinkActive="active" matRipple>
+        <mat-icon>shopping_bag</mat-icon>
+        <span class="nav-label">Venda unitária</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">{{ pageTitle }}</div>
+        <div class="topbar-sub">{{ pageSubtitle }}</div>
+      </div>
+    </header>
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
