@@ -1,0 +1,134 @@
+<div class="page-container">
+
+  <div class="month-nav">
+    <button mat-icon-button (click)="changeMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
+    <span class="month-label">{{ monthLabel() }}</span>
+    <button mat-icon-button (click)="changeMonth(1)"><mat-icon>chevron_right</mat-icon></button>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">Receita total</div>
+      <div class="metric-value rosa">{{ formatCurrency(totalReceita()) }}</div>
+      <div class="metric-badge badge-up">
+        <mat-icon style="font-size:13px;width:13px;height:13px">trending_up</mat-icon>
+        encomendas + unitárias
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Encomendas</div>
+      <div class="metric-value">{{ encomendas().length }}</div>
+      <div class="metric-badge badge-neutral">no mês</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Vendas unitárias</div>
+      <div class="metric-value">{{ vendasUnit().length }}</div>
+      <div class="metric-badge badge-neutral">no mês</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Ticket médio enc.</div>
+      <div class="metric-value">{{ formatCurrency(ticketMedio()) }}</div>
+      <div class="metric-badge badge-up">
+        <mat-icon style="font-size:13px;width:13px;height:13px">trending_up</mat-icon>
+        por encomenda
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Receita por semana</div>
+      <div class="card-sub">Encomendas entregues + unitárias</div>
+      <div class="bar-chart">
+        <div class="bar-wrap" *ngFor="let s of receitaSemanas()">
+          <div class="bars">
+            <div class="bar enc" [style.height.px]="barHeight(s.enc, maxSemana())"
+                 [title]="'Encomendas: ' + formatCurrency(s.enc)"></div>
+            <div class="bar unit" [style.height.px]="barHeight(s.unit, maxSemana())"
+                 [title]="'Unitárias: ' + formatCurrency(s.unit)"></div>
+          </div>
+          <div class="bar-label">{{ s.label }}</div>
+        </div>
+      </div>
+      <div class="bar-legend">
+        <div class="legend-item"><div class="dot rosa"></div> Encomendas</div>
+        <div class="legend-item"><div class="dot marrom"></div> Unitárias</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Produtos mais pedidos</div>
+      <div class="card-sub">Por tipo de encomenda no mês</div>
+      <div *ngIf="topProdutos().length === 0" class="empty-state">
+        Nenhuma encomenda no mês.
+      </div>
+      <div class="donut-wrap" *ngIf="topProdutos().length > 0">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#f0e8e0" stroke-width="18"/>
+          <text x="50" y="54" text-anchor="middle" font-family="sans-serif"
+                font-size="11" font-weight="500" fill="#3a2a1a">
+            {{ topProdutos()[0]?.pct }}%
+          </text>
+        </svg>
+        <div class="donut-legend">
+          <div class="legend-item" *ngFor="let p of topProdutos(); let i = index">
+            <div class="dot" [style.background]="PRODUTO_CORES[i]"></div>
+            <span class="leg-tipo">{{ p.tipo }}</span>
+            <span class="leg-pct">{{ p.pct }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <div class="card">
+      <div class="card-title">Encomendas recentes</div>
+      <div class="card-sub">Últimas do mês</div>
+      <div *ngIf="encRecentes().length === 0" class="empty-state">
+        Nenhuma encomenda cadastrada.
+      </div>
+      <table *ngIf="encRecentes().length > 0" class="data-table">
+        <thead>
+          <tr><th>Cliente</th><th>Tipo</th><th>Entrega</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of encRecentes()">
+            <td>{{ e.nome_cliente }}</td>
+            <td>{{ e.tipo_encomenda }}</td>
+            <td [class.urgente]="isUrgente(e.data_entrega)">{{ formatDate(e.data_entrega) }}</td>
+            <td>
+              <span class="status-pill" [class]="e.status === 'em_producao' ? 'producao' : e.status">
+                {{ STATUS_LABEL[e.status as keyof typeof STATUS_LABEL] }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Andamento — hoje</div>
+      <div class="card-sub">Resumo rápido do kanban</div>
+      <div class="kanban-mini">
+        <div class="k-col">
+          <div class="k-col-title">Pendente</div>
+          <div class="k-count pendente">{{ kanbanResumo().pendente }}</div>
+        </div>
+        <div class="k-col">
+          <div class="k-col-title">Confirmado</div>
+          <div class="k-count confirmado">{{ kanbanResumo().confirmado }}</div>
+        </div>
+        <div class="k-col">
+          <div class="k-col-title">Produção</div>
+          <div class="k-count producao">{{ kanbanResumo().em_producao }}</div>
+        </div>
+        <div class="k-col">
+          <div class="k-col-title">Entregue</div>
+          <div class="k-count entregue">{{ kanbanResumo().entregue }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
