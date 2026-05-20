@@ -1,0 +1,104 @@
+<div class="page-container">
+  <div class="page-header">
+    <div style="font-family:sans-serif;font-size:13px;color:var(--text-muted)">
+      {{ encomendas().length }} encomendas cadastradas
+    </div>
+    <button mat-raised-button class="btn-nova" (click)="abrirForm()">
+      <mat-icon>add</mat-icon> Nova encomenda
+    </button>
+  </div>
+
+  <div class="form-card card" *ngIf="showForm()">
+    <div class="card-title">{{ editandoId() ? 'Editar encomenda' : 'Nova encomenda' }}</div>
+    <form [formGroup]="form" (ngSubmit)="salvar()" class="form-grid">
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nome do cliente</mat-label>
+        <input matInput formControlName="nome_cliente" placeholder="Ex: Ana Lima">
+        <mat-error>Obrigatório</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo de encomenda</mat-label>
+        <mat-select formControlName="tipo_encomenda">
+          <mat-option *ngFor="let t of TIPOS" [value]="t">{{ t }}</mat-option>
+        </mat-select>
+        <mat-error>Obrigatório</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Valor (R$)</mat-label>
+        <input matInput type="number" formControlName="valor" min="0" step="0.01">
+        <mat-error>Obrigatório</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Data do pedido</mat-label>
+        <input matInput [matDatepicker]="dpPedido" formControlName="data_pedido">
+        <mat-datepicker-toggle matSuffix [for]="dpPedido"></mat-datepicker-toggle>
+        <mat-datepicker #dpPedido></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Data de entrega</mat-label>
+        <input matInput [matDatepicker]="dpEntrega" formControlName="data_entrega">
+        <mat-datepicker-toggle matSuffix [for]="dpEntrega"></mat-datepicker-toggle>
+        <mat-datepicker #dpEntrega></mat-datepicker>
+        <mat-error>Obrigatório</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Observações</mat-label>
+        <textarea matInput formControlName="observacoes" rows="2"
+          placeholder="Ex: Trufa de morango, sem açúcar"></textarea>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-button type="button" (click)="fecharForm()">Cancelar</button>
+        <button mat-raised-button class="btn-nova" type="submit">
+          {{ editandoId() ? 'Salvar alterações' : 'Cadastrar' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="card">
+    <div *ngIf="encomendas().length === 0" class="empty-state">
+      Nenhuma encomenda cadastrada ainda. Clique em "Nova encomenda" para começar.
+    </div>
+    <table *ngIf="encomendas().length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>Cliente</th><th>Tipo</th><th>Valor</th>
+          <th>Pedido</th><th>Entrega</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let enc of encomendas()">
+          <td class="td-nome">{{ enc.nome_cliente }}</td>
+          <td>{{ enc.tipo_encomenda }}</td>
+          <td class="td-valor">{{ formatCurrency(enc.valor) }}</td>
+          <td>{{ formatDate(enc.data_pedido) }}</td>
+          <td [class.urgente]="isUrgente(enc.data_entrega, enc.status)">
+            {{ formatDate(enc.data_entrega) }}
+            <span class="tag-urgente" *ngIf="isUrgente(enc.data_entrega, enc.status)">urgente</span>
+          </td>
+          <td>
+            <span class="status-pill" [class]="enc.status === 'em_producao' ? 'producao' : enc.status">
+              {{ STATUS_LABEL[enc.status as keyof typeof STATUS_LABEL] }}
+            </span>
+          </td>
+          <td class="td-actions">
+            <button mat-icon-button (click)="abrirForm(enc)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button class="btn-delete" (click)="excluir(enc.id, enc.nome_cliente)" matTooltip="Excluir">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
