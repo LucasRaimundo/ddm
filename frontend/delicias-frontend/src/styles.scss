@@ -3,7 +3,7 @@
 html {
   @include mat.theme((
     color: (
-      primary: mat.$pink-palette,
+      primary: mat.$rose-palette,
       tertiary: mat.$orange-palette,
     ),
     density: 0,
