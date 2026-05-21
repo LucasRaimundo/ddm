@@ -1,35 +1,25 @@
 <div class="kanban-page">
   <div class="kanban-board">
     <div class="kanban-col" *ngFor="let col of colunas" [class]="'col-' + col.status">
-
       <div class="col-header">
         <span class="col-title">{{ col.label }}</span>
         <span class="col-badge">{{ getColuna(col.status).length }}</span>
       </div>
-
       <div class="cards-list">
-        <div class="enc-card"
-          *ngFor="let enc of getColuna(col.status)"
+        <div class="enc-card" *ngFor="let enc of getColuna(col.status)"
           [class.urgente]="isUrgente(enc.data_entrega) && col.status !== 'entregue' && col.status !== 'cancelado'">
-
           <div class="card-name">{{ enc.nome_cliente }}</div>
           <div class="card-tipo">{{ enc.tipo_encomenda }}</div>
           <div class="card-valor">{{ formatCurrency(enc.valor) }}</div>
-
           <div class="card-meta">
             <span class="meta-item">
               <mat-icon style="font-size:13px;width:13px;height:13px">calendar_today</mat-icon>
               {{ formatDate(enc.data_entrega) }}
             </span>
-            <span class="urgente-tag"
-              *ngIf="isUrgente(enc.data_entrega) && col.status !== 'entregue' && col.status !== 'cancelado'">
-              urgente
-            </span>
+            <span class="urgente-tag" *ngIf="isUrgente(enc.data_entrega) && col.status !== 'entregue' && col.status !== 'cancelado'">urgente</span>
           </div>
-
           <div class="card-actions" *ngIf="proximosPassos(enc).length > 0">
-            <button mat-stroked-button class="action-btn"
-              *ngFor="let prox of proximosPassos(enc)"
+            <button mat-stroked-button class="action-btn" *ngFor="let prox of proximosPassos(enc)"
               [class.btn-cancelar]="prox === 'cancelado'"
               [class.btn-avancar]="prox !== 'cancelado'"
               (click)="avancar(enc, prox)">
@@ -37,12 +27,8 @@
             </button>
           </div>
         </div>
-
-        <div class="col-empty" *ngIf="getColuna(col.status).length === 0">
-          nenhuma
-        </div>
+        <div class="col-empty" *ngIf="getColuna(col.status).length === 0">nenhuma</div>
       </div>
-
     </div>
   </div>
 </div>

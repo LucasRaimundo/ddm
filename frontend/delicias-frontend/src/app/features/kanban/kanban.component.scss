@@ -1,137 +1,27 @@
-.kanban-page {
-  padding: 24px;
-  height: calc(100vh - var(--topbar-h));
-  overflow-x: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.kanban-board {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  height: 100%;
-  min-width: fit-content;
-}
-
-.kanban-col {
-  width: 230px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 100%;
-}
-
-.col-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 4px;
-}
-
-.col-title {
-  font-family: sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-muted);
-}
-
-.col-badge {
-  background: var(--creme);
-  border: 0.5px solid var(--border);
-  border-radius: 20px;
-  font-family: sans-serif;
-  font-size: 11px;
-  padding: 1px 8px;
-  color: var(--text-muted);
-}
-
-.cards-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  padding-bottom: 12px;
-}
-
+.kanban-page { padding: 24px; height: calc(100vh - var(--topbar-h)); overflow-x: auto; display: flex; flex-direction: column; }
+.kanban-board { display: flex; gap: 16px; align-items: flex-start; height: 100%; min-width: fit-content; }
+.kanban-col { width: 230px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; max-height: 100%; }
+.col-header { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+.col-title { font-family: sans-serif; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+.col-badge { background: var(--creme); border: 0.5px solid var(--border); border-radius: 20px; font-family: sans-serif; font-size: 11px; padding: 1px 8px; color: var(--text-muted); }
+.cards-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-bottom: 12px; }
 .enc-card {
-  background: #fff;
-  border-radius: 12px;
-  border: 0.5px solid var(--border);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: box-shadow 0.2s;
-
+  background: #fff; border-radius: 12px; border: 0.5px solid var(--border); padding: 14px;
+  display: flex; flex-direction: column; gap: 6px;
   &:hover { border-color: var(--rosa-medio); }
   &.urgente { border-left: 3px solid #E24B4A; border-radius: 0 12px 12px 0; }
 }
-
 .card-name  { font-family: sans-serif; font-size: 13px; font-weight: 500; color: var(--text-dark); }
 .card-tipo  { font-family: sans-serif; font-size: 12px; color: var(--text-muted); }
 .card-valor { font-family: sans-serif; font-size: 14px; font-weight: 500; color: var(--rosa); }
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: sans-serif;
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.meta-item { display: flex; align-items: center; gap: 3px; }
-
-.urgente-tag {
-  background: #FCEBEB;
-  color: #A32D2D;
-  font-size: 10px;
-  padding: 1px 7px;
-  border-radius: 20px;
-  margin-left: auto;
-}
-
-.card-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
+.card-meta  { display: flex; align-items: center; gap: 6px; font-family: sans-serif; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.meta-item  { display: flex; align-items: center; gap: 3px; }
+.urgente-tag { background: #FCEBEB; color: #A32D2D; font-size: 10px; padding: 1px 7px; border-radius: 20px; margin-left: auto; }
+.card-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 .action-btn {
-  width: 100%;
-  font-family: sans-serif !important;
-  font-size: 12px !important;
-  height: 32px !important;
-  line-height: 32px !important;
-
-  &.btn-avancar {
-    border-color: var(--rosa) !important;
-    color: var(--rosa) !important;
-    &:hover { background: var(--rosa-claro) !important; }
-  }
-
-  &.btn-cancelar {
-    border-color: var(--border) !important;
-    color: var(--text-muted) !important;
-    font-size: 11px !important;
-    &:hover { background: #FCEBEB !important; color: #A32D2D !important; border-color: #E24B4A !important; }
-  }
+  width: 100%; font-family: sans-serif !important; font-size: 12px !important; height: 32px !important; line-height: 32px !important;
+  &.btn-avancar  { border-color: var(--rosa) !important; color: var(--rosa) !important; &:hover { background: var(--rosa-claro) !important; } }
+  &.btn-cancelar { border-color: var(--border) !important; color: var(--text-muted) !important; font-size: 11px !important; &:hover { background: #FCEBEB !important; color: #A32D2D !important; border-color: #E24B4A !important; } }
 }
-
 .col-cancelado .enc-card { opacity: 0.6; &:hover { opacity: 1; } }
-
-.col-empty {
-  font-family: sans-serif;
-  font-size: 12px;
-  color: var(--border);
-  text-align: center;
-  padding: 20px 0;
-  border: 1px dashed var(--border);
-  border-radius: 10px;
-}
+.col-empty { font-family: sans-serif; font-size: 12px; color: var(--border); text-align: center; padding: 20px 0; border: 1px dashed var(--border); border-radius: 10px; }

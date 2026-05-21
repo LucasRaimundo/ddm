@@ -1,50 +1,14 @@
 @use '@angular/material' as mat;
 
-@include mat.core();
-
-$rosa-palette: (
-  50:  #FBEAF0,
-  100: #F4C0D1,
-  200: #ED93B1,
-  300: #E2658F,
-  400: #D9446F,
-  500: #D4537E,
-  600: #C03870,
-  700: #993556,
-  800: #72243E,
-  900: #4B1528,
-  contrast: (
-    50:  #3a2a1a, 100: #3a2a1a, 200: #3a2a1a,
-    300: #fff, 400: #fff, 500: #fff,
-    600: #fff, 700: #fff, 800: #fff, 900: #fff,
-  )
-);
-
-$marrom-palette: (
-  50:  #FAEEDA,
-  100: #FAC775,
-  200: #EF9F27,
-  300: #D08010,
-  400: #BA7517,
-  500: #854F0B,
-  600: #633806,
-  700: #412402,
-  contrast: (
-    50:  #3a2a1a, 100: #3a2a1a, 200: #3a2a1a,
-    300: #fff, 400: #fff, 500: #fff, 600: #fff, 700: #fff,
-  )
-);
-
-$primary: mat.define-palette($rosa-palette, 500, 100, 700);
-$accent:  mat.define-palette($marrom-palette, 200, 50, 500);
-$warn:    mat.define-palette(mat.$red-palette);
-
-$theme: mat.define-light-theme((
-  color: (primary: $primary, accent: $accent, warn: $warn),
-  density: 0,
-));
-
-@include mat.all-component-themes($theme);
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$pink-palette,
+      tertiary: mat.$orange-palette,
+    ),
+    density: 0,
+  ));
+}
 
 :root {
   --rosa:         #D4537E;
