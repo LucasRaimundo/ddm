@@ -4,52 +4,65 @@
   <div><button mat-button (click)="irPara.emit(3)">Começar pela configuração →</button></div>
 </div>
 
+<div class="legenda-geral card" *ngIf="service.precos().length">
+  <span class="leg"><i class="dot insumos"></i>Ingredientes e embalagem</span>
+  <span class="leg"><i class="dot mao"></i>Seu trabalho</span>
+  <span class="leg"><i class="dot fixos"></i>Custos fixos</span>
+  <span class="leg"><i class="dot extra"></i>Custo extra do canal</span>
+  <span class="leg"><i class="dot taxas"></i>Taxa do canal</span>
+  <span class="leg"><i class="dot lucro"></i>Lucro</span>
+</div>
+
 <div class="card preco-card" *ngFor="let p of service.precos()">
   <div class="topo">
     <div>
       <div class="nome">{{ p.nome }}</div>
       <div class="card-sub">
-        Rende {{ p.rendimento }} · {{ formatNumber(p.unidades_aproveitadas, 1) }} aproveitadas após perdas
-      </div>
-    </div>
-    <div class="sugeridos">
-      <div class="sugerido">
-        <span class="rotulo">Unidade</span>
-        <span class="valor">{{ formatCurrency(p.preco_sugerido_un) }}</span>
-      </div>
-      <div class="sugerido">
-        <span class="rotulo">Cento</span>
-        <span class="valor">{{ formatCurrency(p.preco_sugerido_cento) }}</span>
+        Rende {{ p.rendimento }} · {{ formatNumber(p.unidades_aproveitadas, 1) }} aproveitadas após perdas ·
+        custo de <strong>{{ formatCurrency(p.custo_total_un) }}</strong> por unidade
       </div>
     </div>
   </div>
 
-  <!-- Composição do preço da unidade -->
-  <div class="composicao">
-    <div class="barra">
-      <div *ngFor="let f of fatias(p)" class="fatia {{ f.classe }}"
-           [style.width.%]="pct(f.valor, p)"
-           [matTooltip]="f.label + ': ' + formatCurrency(f.valor)"></div>
-    </div>
-    <div class="legenda">
-      <span *ngFor="let f of fatias(p)" class="leg">
-        <i class="dot {{ f.classe }}"></i>{{ f.label }} <strong>{{ formatCurrency(f.valor) }}</strong>
-      </span>
-    </div>
-    <div class="custo-total">Custo total por unidade: <strong>{{ formatCurrency(p.custo_total_un) }}</strong></div>
-  </div>
-
-  <!-- Comparação com o preço atual -->
-  <div class="comparacao">
-    <div class="analise {{ a.analise.status }}" *ngFor="let a of [
-      { titulo: 'Unidade', analise: p.analise_unidade },
-      { titulo: 'Cento',   analise: p.analise_cento }
-    ]">
-      <div class="analise-topo">
-        <span class="analise-titulo">{{ a.titulo }} · você cobra {{ formatCurrency(a.analise.preco_atual) }}</span>
-        <span class="pill">{{ STATUS_PRECO_LABEL[a.analise.status] }}</span>
+  <div class="canais">
+    <div class="canal" *ngFor="let c of p.canais">
+      <div class="canal-topo">
+        <span class="canal-nome">{{ c.nome }}</span>
+        <span class="canal-taxa">taxa {{ formatNumber(c.taxa_percentual, 2) }}%</span>
       </div>
-      <div class="analise-msg">{{ mensagem(a.analise) }}</div>
+
+      <div class="sugeridos">
+        <div class="sugerido">
+          <span class="rotulo">Unidade</span>
+          <span class="valor">{{ formatCurrency(c.preco_sugerido_un) }}</span>
+        </div>
+        <div class="sugerido">
+          <span class="rotulo">Cento</span>
+          <span class="valor">{{ formatCurrency(c.preco_sugerido_cento) }}</span>
+        </div>
+      </div>
+
+      <div class="barra">
+        <div *ngFor="let f of fatias(p, c)" class="fatia {{ f.classe }}"
+             [style.width.%]="pct(f.valor, c)"
+             [matTooltip]="f.label + ': ' + formatCurrency(f.valor)"></div>
+      </div>
+      <div class="por-un">
+        <span>taxa {{ formatCurrency(c.taxas_un) }}</span>
+        <span>lucro {{ formatCurrency(c.lucro_un) }}</span>
+        <span *ngIf="c.custo_extra_un">extra {{ formatCurrency(c.custo_extra_un) }}</span>
+      </div>
+
+      <div class="analise {{ a.analise.status }}" *ngFor="let a of analises(c)">
+        <div class="analise-topo">
+          <span class="analise-titulo">{{ a.titulo }} · você cobra {{ formatCurrency(a.analise.preco_atual) }}</span>
+          <span class="pill">{{ STATUS_PRECO_LABEL[a.analise.status] }}</span>
+        </div>
+        <div class="analise-msg">{{ mensagem(a.analise) }}</div>
+      </div>
+      <div class="sem-preco" *ngIf="analises(c).length === 0">
+        Informe na receita quanto você cobra aqui para comparar.
+      </div>
     </div>
   </div>
 

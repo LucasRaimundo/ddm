@@ -77,16 +77,21 @@
     </div>
 
     <div class="full-width secao-titulo">Quanto você cobra hoje? <small>(opcional — para comparar)</small></div>
-    <mat-form-field appearance="outline">
-      <mat-label>Preço atual da unidade</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput type="number" formControlName="preco_venda_unidade" min="0" step="0.01">
-    </mat-form-field>
-    <mat-form-field appearance="outline">
-      <mat-label>Preço atual do cento</mat-label>
-      <span matTextPrefix>R$&nbsp;</span>
-      <input matInput type="number" formControlName="preco_venda_cento" min="0" step="0.01">
-    </mat-form-field>
+    <div class="full-width precos-canais">
+      <div class="preco-canal" *ngFor="let canal of service.canais()" [formGroup]="precoGrupo(canal.id)">
+        <div class="preco-canal-nome">{{ canal.nome }}</div>
+        <mat-form-field appearance="outline" floatLabel="always">
+          <mat-label>Unidade</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput type="number" formControlName="unidade" min="0" step="0.01">
+        </mat-form-field>
+        <mat-form-field appearance="outline" floatLabel="always">
+          <mat-label>Cento</mat-label>
+          <span matTextPrefix>R$&nbsp;</span>
+          <input matInput type="number" formControlName="cento" min="0" step="0.01">
+        </mat-form-field>
+      </div>
+    </div>
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Observações</mat-label>
       <textarea matInput formControlName="observacoes" rows="2"></textarea>

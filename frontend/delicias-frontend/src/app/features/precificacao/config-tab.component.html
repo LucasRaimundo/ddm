@@ -20,7 +20,10 @@
 
   <div class="card">
     <div class="card-title">2. Custos fixos do mês</div>
-    <div class="card-sub">Gás, luz, água, internet, DAS do MEI, anúncios, manutenção de utensílios... some tudo.</div>
+    <div class="card-sub">
+      Gás, luz, água, internet, DAS do MEI, anúncios, <strong>mensalidade do iFood</strong>
+      (R$ 150 no plano Entrega, quando vender mais de R$ 1.800 no mês)... some tudo.
+    </div>
     <div class="form-grid">
       <mat-form-field appearance="outline">
         <mat-label>Custos fixos por mês</mat-label>
@@ -38,9 +41,9 @@
   </div>
 
   <div class="card">
-    <div class="card-title">3. Lucro, taxas e desconto</div>
+    <div class="card-title">3. Lucro e desconto</div>
     <div class="card-sub">O lucro é o dinheiro do negócio (reserva, equipamentos), separado do seu salário.</div>
-    <div class="form-grid tres">
+    <div class="form-grid">
       <mat-form-field appearance="outline">
         <mat-label>Lucro desejado</mat-label>
         <input matInput type="number" formControlName="lucro_percentual" min="0">
@@ -48,24 +51,13 @@
         <mat-hint>Comum: 10 a 25%</mat-hint>
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Taxas</mat-label>
-        <input matInput type="number" formControlName="taxas_percentual" min="0">
-        <span matTextSuffix>%</span>
-        <mat-hint>Maquininha, iFood...</mat-hint>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
         <mat-label>Desconto no cento</mat-label>
         <input matInput type="number" formControlName="desconto_cento_percentual" min="0">
         <span matTextSuffix>%</span>
         <mat-hint>Sobre 100 × preço da unidade</mat-hint>
       </mat-form-field>
-      <div class="preview" [class.alerta]="descontoComeLucro">
-        <ng-container *ngIf="!descontoComeLucro">
-          O preço é o custo ÷ <strong>{{ divisor.toFixed(2) }}</strong>. Assim lucro e taxas saem "de dentro" do preço.
-        </ng-container>
-        <ng-container *ngIf="descontoComeLucro">
-          ⚠️ O desconto do cento é igual ou maior que o lucro: no cento você só cobre o custo, ou perde dinheiro.
-        </ng-container>
+      <div class="preview alerta" *ngIf="descontoComeLucro">
+        ⚠️ O desconto do cento é igual ou maior que o lucro: no cento você só cobre o custo, ou perde dinheiro.
       </div>
     </div>
   </div>
@@ -76,3 +68,72 @@
     </button>
   </div>
 </form>
+
+<!-- Canais de venda -->
+<div class="card canais">
+  <div class="canais-topo">
+    <div>
+      <div class="card-title">4. Onde você vende</div>
+      <div class="card-sub">
+        Cada canal cobra uma taxa diferente, então cada um tem o seu preço.
+        Use "custo extra por unidade" para o que só existe naquele canal (ex.: caixinha e lacre do delivery).
+      </div>
+    </div>
+    <button mat-stroked-button (click)="editarCanal()" *ngIf="!editandoCanal">
+      <mat-icon>add</mat-icon> Novo canal
+    </button>
+  </div>
+
+  <table class="data-table" *ngIf="service.canais().length">
+    <thead><tr><th>Canal</th><th>Taxa</th><th>Custo extra / un</th><th>De cada R$ 10 vendidos</th><th></th></tr></thead>
+    <tbody>
+      <tr *ngFor="let c of service.canais()">
+        <td class="td-nome">{{ c.nome }}</td>
+        <td>{{ formatNumber(c.taxa_percentual, 2) }}%</td>
+        <td>{{ c.custo_extra_un ? formatCurrency(c.custo_extra_un) : '—' }}</td>
+        <td class="td-dez">
+          <span class="taxa">{{ formatCurrency(deCadaDez(c).taxa) }} de taxa</span>
+          <span class="lucro">{{ formatCurrency(deCadaDez(c).lucro) }} de lucro</span>
+        </td>
+        <td class="td-actions">
+          <button mat-icon-button matTooltip="Editar" (click)="editarCanal(c)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button matTooltip="Excluir" class="btn-delete" (click)="excluirCanal(c)"
+                  [disabled]="service.canais().length <= 1"><mat-icon>delete_outline</mat-icon></button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="canal-form" *ngIf="editandoCanal">
+    <div class="modelos" *ngIf="editandoCanal === 'novo'">
+      <span>Atalhos:</span>
+      <button mat-stroked-button type="button" *ngFor="let m of MODELOS_CANAL" (click)="editarCanal(undefined, m.canal)">
+        {{ m.label }}
+      </button>
+    </div>
+    <form [formGroup]="canalForm" (ngSubmit)="salvarCanal()" class="form-grid tres">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome do canal</mat-label>
+        <input matInput formControlName="nome" placeholder="Ex: iFood Entrega">
+        <mat-error>Obrigatório</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Taxa total</mat-label>
+        <input matInput type="number" formControlName="taxa_percentual" min="0" step="0.1">
+        <span matTextSuffix>%</span>
+        <mat-hint>Comissão + taxa de pagamento</mat-hint>
+        <mat-error>Entre 0 e 59,99%</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Custo extra por unidade</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input matInput type="number" formControlName="custo_extra_un" min="0" step="0.01">
+        <mat-hint>Opcional</mat-hint>
+      </mat-form-field>
+      <div class="form-actions">
+        <button mat-button type="button" (click)="cancelarCanal()">Cancelar</button>
+        <button mat-raised-button class="btn-nova" type="submit" [disabled]="salvandoCanal">Salvar canal</button>
+      </div>
+    </form>
+  </div>
+</div>

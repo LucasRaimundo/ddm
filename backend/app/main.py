@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from postgrest.exceptions import APIError
 
 from app.core.config import CORS_ORIGINS
-from app.routers import compras, encomendas, insumos, precificacao, receitas, vendas
+from app.routers import canais, compras, encomendas, insumos, precificacao, receitas, vendas
 
 app = FastAPI(title="Delícias de Marias API", version="0.3.0")
 
@@ -22,6 +22,7 @@ app.include_router(insumos.router)
 app.include_router(receitas.router)
 app.include_router(precificacao.router)
 app.include_router(compras.router)
+app.include_router(canais.router)
 
 
 # Erros do Postgres/Supabase viram respostas legíveis em vez de 500 genérico

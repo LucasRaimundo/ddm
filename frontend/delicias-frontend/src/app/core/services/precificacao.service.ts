@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, forkJoin, tap } from 'rxjs';
 import { API_URL } from '../api.config';
 import {
-  ConfigPrecificacao, ConfigPrecificacaoForm, Insumo, InsumoForm,
+  CanalVenda, CanalVendaForm, ConfigPrecificacao, ConfigPrecificacaoForm, Insumo, InsumoForm,
   Receita, ReceitaForm, ResultadoPreco,
 } from '../../shared/models/precificacao.model';
 
@@ -15,6 +15,7 @@ export class PrecificacaoService {
   private _receitas = signal<Receita[]>([]);
   private _precos   = signal<ResultadoPreco[]>([]);
   private _config   = signal<ConfigPrecificacao | null>(null);
+  private _canais   = signal<CanalVenda[]>([]);
   private _carregando = signal(false);
   private _erro = signal<string | null>(null);
 
@@ -22,6 +23,7 @@ export class PrecificacaoService {
   readonly receitas   = this._receitas.asReadonly();
   readonly precos     = this._precos.asReadonly();
   readonly config     = this._config.asReadonly();
+  readonly canais     = this._canais.asReadonly();
   readonly carregando = this._carregando.asReadonly();
   readonly erro       = this._erro.asReadonly();
 
@@ -33,12 +35,14 @@ export class PrecificacaoService {
       receitas: this.http.get<Receita[]>(`${API_URL}/receitas`),
       precos:   this.http.get<ResultadoPreco[]>(`${API_URL}/precificacao`),
       config:   this.http.get<ConfigPrecificacao>(`${API_URL}/precificacao/config`),
+      canais:   this.http.get<CanalVenda[]>(`${API_URL}/canais`),
     }).subscribe({
       next: r => {
         this._insumos.set(r.insumos);
         this._receitas.set(r.receitas);
         this._precos.set(r.precos);
         this._config.set(r.config);
+        this._canais.set(r.canais);
         this._erro.set(null);
         this._carregando.set(false);
       },
@@ -60,6 +64,11 @@ export class PrecificacaoService {
   criarReceita(f: ReceitaForm)               { return this.depois(this.http.post<Receita>(`${API_URL}/receitas`, f)); }
   atualizarReceita(id: string, f: ReceitaForm) { return this.depois(this.http.put<Receita>(`${API_URL}/receitas/${id}`, f)); }
   excluirReceita(id: string)                 { return this.depois(this.http.delete<void>(`${API_URL}/receitas/${id}`)); }
+
+  // ── Canais de venda
+  criarCanal(f: CanalVendaForm)                { return this.depois(this.http.post<CanalVenda>(`${API_URL}/canais`, f)); }
+  atualizarCanal(id: string, f: CanalVendaForm) { return this.depois(this.http.put<CanalVenda>(`${API_URL}/canais/${id}`, f)); }
+  excluirCanal(id: string)                     { return this.depois(this.http.delete<void>(`${API_URL}/canais/${id}`)); }
 
   // ── Configuração
   salvarConfig(f: ConfigPrecificacaoForm) {

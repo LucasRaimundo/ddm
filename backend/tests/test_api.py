@@ -28,11 +28,15 @@ def test_venda_calcula_total(client):
 
 def test_precificacao_ponta_a_ponta(client):
     # configuração ainda não salva → devolve padrão
-    cfg = client.get("/precificacao/config").json()
-    assert cfg["configurado"] is False
+    assert client.get("/precificacao/config").json()["configurado"] is False
+
+    direto = client.post("/canais", json={"nome": "Venda direta", "taxa_percentual": 5, "ordem": 1}).json()
+    ifood = client.post("/canais", json={"nome": "iFood Entrega", "taxa_percentual": 26.5,
+                                         "custo_extra_un": 0.2, "ordem": 2}).json()
+    assert [c["nome"] for c in client.get("/canais").json()] == ["Venda direta", "iFood Entrega"]
 
     cfg = {"salario_desejado": 3000, "horas_mes": 120, "custos_fixos_mes": 300, "producao_mes": 2000,
-           "lucro_percentual": 15, "taxas_percentual": 5, "desconto_cento_percentual": 10}
+           "lucro_percentual": 15, "desconto_cento_percentual": 10}
     assert client.put("/precificacao/config", json=cfg).json()["configurado"] is True
     assert client.get("/precificacao/config").json()["salario_desejado"] == 3000
 
@@ -42,22 +46,35 @@ def test_precificacao_ponta_a_ponta(client):
                                        "preco_embalagem": 6, "quantidade_embalagem": 100}).json()
 
     receita = {"nome": "Brigadeiro", "rendimento": 25, "tempo_preparo_min": 60, "perda_percentual": 0,
-               "preco_venda_cento": 150,
+               "precos_atuais": {direto["id"]: {"cento": 150}, ifood["id"]: {"unidade": 2.5}},
                "itens": [{"insumo_id": lc["id"], "quantidade": 395},
                          {"insumo_id": fm["id"], "quantidade": 25}]}
     r = client.post("/receitas", json=receita)
     assert r.status_code == 201
     rid = r.json()["id"]
-    assert len(r.json()["itens"]) == 2
+    assert r.json()["precos_atuais"][direto["id"]]["cento"] == 150
 
     preco = client.get(f"/receitas/{rid}/preco").json()
-    assert preco["preco_sugerido_un"] == 1.86
-    assert preco["analise_cento"]["status"] == "prejuizo"  # 150 × 0,95 = 142,50 < custo 149
+    canais = {c["nome"]: c for c in preco["canais"]}
+    assert canais["Venda direta"]["preco_sugerido_un"] == 1.86
+    assert canais["Venda direta"]["analise_cento"]["status"] == "prejuizo"   # 150 × 0,95 = 142,50 < 149
+    assert canais["iFood Entrega"]["preco_sugerido_un"] == 2.89
+    assert canais["iFood Entrega"]["analise_unidade"]["status"] == "abaixo"
+
+    # mudar a taxa do iFood recalcula
+    client.put(f"/canais/{ifood['id']}", json={**{k: ifood[k] for k in ("nome", "custo_extra_un", "ordem")},
+                                                "taxa_percentual": 30})
+    novo = {c["nome"]: c for c in client.get("/precificacao").json()[0]["canais"]}
+    assert novo["iFood Entrega"]["preco_sugerido_un"] > 2.89
+
+    # lucro + taxa ≥ 90% é recusado dos dois lados
+    assert client.post("/canais", json={"nome": "X", "taxa_percentual": 59.9 + 15}).status_code == 422
+    assert client.put("/precificacao/config", json={**cfg, "lucro_percentual": 65}).status_code == 422
 
     # leite condensado subiu → preço sobe sozinho
     client.put(f"/insumos/{lc['id']}", json={**{k: lc[k] for k in
                ("nome", "categoria", "unidade", "quantidade_embalagem")}, "preco_embalagem": 9})
-    assert client.get("/precificacao").json()[0]["preco_sugerido_un"] > 1.86
+    assert client.get("/precificacao").json()[0]["canais"][0]["preco_sugerido_un"] > 1.86
 
     # insumo em uso não pode ser apagado
     assert client.delete(f"/insumos/{lc['id']}").status_code == 409
@@ -71,6 +88,10 @@ def test_precificacao_ponta_a_ponta(client):
     assert len(r.json()["itens"]) == 1
     assert client.delete(f"/receitas/{rid}").status_code == 204
     assert client.delete(f"/insumos/{lc['id']}").status_code == 204
+
+    # não dá para apagar o último canal
+    assert client.delete(f"/canais/{ifood['id']}").status_code == 204
+    assert client.delete(f"/canais/{direto['id']}").status_code == 409
 
 
 def test_cors(client):

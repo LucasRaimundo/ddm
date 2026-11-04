@@ -40,13 +40,25 @@ export class ReceitasTabComponent {
     rendimento:          [null as number | null, [Validators.required, Validators.min(1)]],
     tempo_preparo_min:   [null as number | null, [Validators.required, Validators.min(0)]],
     perda_percentual:    [5, [Validators.required, Validators.min(0), Validators.max(99)]],
-    preco_venda_unidade: [null as number | null, Validators.min(0.01)],
-    preco_venda_cento:   [null as number | null, Validators.min(0.01)],
+    precos_atuais:       this.fb.group<Record<string, FormGroup>>({}),
     observacoes:         [''],
     itens:               this.fb.array<FormGroup>([]),
   });
 
   get itens(): FormArray<FormGroup> { return this.form.controls.itens; }
+
+  /** Um grupo {unidade, cento} para cada canal de venda. */
+  private montarPrecos(atuais: Record<string, { unidade?: number | null; cento?: number | null }> = {}) {
+    const grupo = this.fb.group<Record<string, FormGroup>>({});
+    for (const canal of this.service.canais()) {
+      const p = atuais[canal.id] ?? {};
+      grupo.addControl(canal.id, this.fb.group({
+        unidade: [p.unidade ?? null, Validators.min(0.01)],
+        cento:   [p.cento ?? null, Validators.min(0.01)],
+      }));
+    }
+    this.form.setControl('precos_atuais', grupo);
+  }
 
   private novoItem(insumo_id: string | null = null, quantidade: number | null = null): FormGroup {
     return this.fb.group({
@@ -94,13 +106,17 @@ export class ReceitasTabComponent {
   abrirForm(r?: Receita) {
     this.editandoId = r?.id ?? null;
     this.itens.clear();
+    this.montarPrecos(r?.precos_atuais);
     if (r) {
-      this.form.reset({ ...r, observacoes: r.observacoes ?? '' });
+      const { precos_atuais, itens, ...resto } = r;
+      this.form.patchValue({ ...resto, observacoes: r.observacoes ?? '' });
       r.itens.forEach(i => this.itens.push(this.novoItem(i.insumo_id, i.quantidade)));
     } else {
-      this.form.reset({ perda_percentual: 5, observacoes: '' });
+      this.form.patchValue({ nome: '', rendimento: null, tempo_preparo_min: null, perda_percentual: 5, observacoes: '' });
       this.adicionarItem();
     }
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
     this.showForm = true;
   }
 
@@ -114,8 +130,7 @@ export class ReceitasTabComponent {
       rendimento:          Number(v.rendimento),
       tempo_preparo_min:   Number(v.tempo_preparo_min),
       perda_percentual:    Number(v.perda_percentual),
-      preco_venda_unidade: v.preco_venda_unidade || null,
-      preco_venda_cento:   v.preco_venda_cento || null,
+      precos_atuais:       this.precosParaEnvio(v.precos_atuais as Record<string, any>),
       observacoes:         v.observacoes || null,
       itens: v.itens.map((i: any) => ({ insumo_id: i.insumo_id, quantidade: Number(i.quantidade) })),
     };
@@ -132,6 +147,21 @@ export class ReceitasTabComponent {
       },
       error: (e: HttpErrorResponse) => { this.salvando = false; this.snack.open(mensagemErro(e), 'OK', { duration: 5000 }); },
     });
+  }
+
+  /** Só manda os canais que têm algum preço preenchido. */
+  private precosParaEnvio(precos: Record<string, { unidade: any; cento: any }>) {
+    const out: Record<string, { unidade: number | null; cento: number | null }> = {};
+    for (const [id, p] of Object.entries(precos ?? {})) {
+      const unidade = Number(p.unidade) || null;
+      const cento = Number(p.cento) || null;
+      if (unidade || cento) out[id] = { unidade, cento };
+    }
+    return out;
+  }
+
+  precoGrupo(canalId: string): FormGroup {
+    return this.form.controls.precos_atuais.get(canalId) as FormGroup;
   }
 
   excluir(r: Receita) {

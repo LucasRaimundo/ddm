@@ -36,13 +36,18 @@ export interface ReceitaItem {
   quantidade: number;
 }
 
+export interface PrecoAtual {
+  unidade?: number | null;
+  cento?: number | null;
+}
+
 export interface ReceitaForm {
   nome: string;
   rendimento: number;
   tempo_preparo_min: number;
   perda_percentual: number;
-  preco_venda_unidade: number | null;
-  preco_venda_cento: number | null;
+  /** preço praticado hoje, por canal: { [canal_id]: { unidade, cento } } */
+  precos_atuais: Record<string, PrecoAtual>;
   observacoes?: string | null;
   itens: ReceitaItem[];
 }
@@ -52,13 +57,23 @@ export interface Receita extends ReceitaForm {
   created_at?: string;
 }
 
+export interface CanalVendaForm {
+  nome: string;
+  taxa_percentual: number;
+  custo_extra_un: number;
+  ordem: number;
+}
+
+export interface CanalVenda extends CanalVendaForm {
+  id: string;
+}
+
 export interface ConfigPrecificacaoForm {
   salario_desejado: number;
   horas_mes: number;
   custos_fixos_mes: number;
   producao_mes: number;
   lucro_percentual: number;
-  taxas_percentual: number;
   desconto_cento_percentual: number;
 }
 
@@ -83,6 +98,20 @@ export interface ItemCusto {
   custo: number;
 }
 
+export interface PrecoCanal {
+  canal_id: string;
+  nome: string;
+  taxa_percentual: number;
+  custo_extra_un: number;
+  custo_un: number;
+  taxas_un: number;
+  lucro_un: number;
+  preco_sugerido_un: number;
+  preco_sugerido_cento: number;
+  analise_unidade: AnalisePrecoAtual;
+  analise_cento: AnalisePrecoAtual;
+}
+
 export interface ResultadoPreco {
   receita_id: string;
   nome: string;
@@ -94,11 +123,6 @@ export interface ResultadoPreco {
   mao_obra_un: number;
   custos_fixos_un: number;
   custo_total_un: number;
-  lucro_un: number;
-  taxas_un: number;
-  preco_sugerido_un: number;
-  preco_sugerido_cento: number;
-  analise_unidade: AnalisePrecoAtual;
-  analise_cento: AnalisePrecoAtual;
+  canais: PrecoCanal[];
   alertas: string[];
 }

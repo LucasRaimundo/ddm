@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PrecificacaoService } from '../../core/services/precificacao.service';
-import { AnalisePrecoAtual, ResultadoPreco, STATUS_PRECO_LABEL } from '../../shared/models/precificacao.model';
+import { AnalisePrecoAtual, PrecoCanal, ResultadoPreco, STATUS_PRECO_LABEL } from '../../shared/models/precificacao.model';
 import { formatCurrency, formatNumber } from '../../shared/utils/format';
 
 interface Fatia { label: string; valor: number; classe: string; }
@@ -25,26 +25,36 @@ export class PrecosTabComponent {
   readonly STATUS_PRECO_LABEL = STATUS_PRECO_LABEL;
   abertos = new Set<string>();
 
-  fatias(p: ResultadoPreco): Fatia[] {
-    return [
+  /** De onde vem cada centavo do preço da unidade, nesse canal. */
+  fatias(p: ResultadoPreco, c: PrecoCanal): Fatia[] {
+    const fatias: Fatia[] = [
       { label: 'Ingredientes e embalagem', valor: p.custo_insumos_un, classe: 'insumos' },
       { label: 'Seu trabalho',             valor: p.mao_obra_un,      classe: 'mao' },
       { label: 'Custos fixos',             valor: p.custos_fixos_un,  classe: 'fixos' },
-      { label: 'Taxas',                    valor: p.taxas_un,         classe: 'taxas' },
-      { label: 'Lucro',                    valor: p.lucro_un,         classe: 'lucro' },
     ];
+    if (c.custo_extra_un) fatias.push({ label: 'Custo extra do canal', valor: c.custo_extra_un, classe: 'extra' });
+    fatias.push(
+      { label: 'Taxa do canal', valor: c.taxas_un, classe: 'taxas' },
+      { label: 'Lucro',         valor: c.lucro_un, classe: 'lucro' },
+    );
+    return fatias;
   }
 
-  pct(valor: number, p: ResultadoPreco): number {
-    return p.preco_sugerido_un ? (valor / p.preco_sugerido_un) * 100 : 0;
+  pct(valor: number, c: PrecoCanal): number {
+    return c.preco_sugerido_un ? (valor / c.preco_sugerido_un) * 100 : 0;
+  }
+
+  analises(c: PrecoCanal) {
+    return [
+      { titulo: 'Unidade', analise: c.analise_unidade },
+      { titulo: 'Cento',   analise: c.analise_cento },
+    ].filter(a => a.analise.status !== 'sem_preco');
   }
 
   mensagem(a: AnalisePrecoAtual): string {
-    if (a.status === 'sem_preco') return 'Informe o preço atual na receita para comparar.';
-    const lucro = formatCurrency(a.lucro_real);
     const margem = a.margem_real_pct?.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-    if (a.status === 'prejuizo') return `Você perde ${formatCurrency(Math.abs(a.lucro_real!))} a cada venda.`;
-    return `Sobra ${lucro} de lucro (${margem}% do preço), já pagando seu trabalho.`;
+    if (a.status === 'prejuizo') return `você perde ${formatCurrency(Math.abs(a.lucro_real!))} a cada venda`;
+    return `sobra ${formatCurrency(a.lucro_real)} de lucro (${margem}% do preço)`;
   }
 
   alternar(id: string) {

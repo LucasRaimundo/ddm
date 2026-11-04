@@ -50,13 +50,19 @@ class ReceitaItem(BaseModel):
     quantidade: float = Field(gt=0, description="Quantidade usada na receita inteira, na unidade do insumo")
 
 
+class PrecoAtual(BaseModel):
+    unidade: Optional[float] = Field(None, gt=0, description="Preço praticado hoje na unidade")
+    cento:   Optional[float] = Field(None, gt=0, description="Preço praticado hoje no cento")
+
+
 class ReceitaBase(BaseModel):
     nome:                str = Field(min_length=1)
     rendimento:          int = Field(gt=0, description="Unidades que a receita rende")
     tempo_preparo_min:   int = Field(ge=0, description="Tempo total de trabalho (cozinhar, enrolar, embalar)")
     perda_percentual:    float = Field(5, ge=0, lt=100)
-    preco_venda_unidade: Optional[float] = Field(None, gt=0, description="Preço praticado hoje na unidade")
-    preco_venda_cento:   Optional[float] = Field(None, gt=0, description="Preço praticado hoje no cento")
+    precos_atuais:       dict[str, PrecoAtual] = Field(
+        default_factory=dict, description="Preço praticado hoje, por canal: {canal_id: {unidade, cento}}",
+    )
     observacoes:         Optional[str] = None
     itens:               list[ReceitaItem] = Field(default_factory=list)
 
@@ -83,6 +89,29 @@ class Receita(ReceitaBase):
     created_at: Optional[str] = None
 
 
+# ───────────────────────── Canais de venda ─────────────────────────
+
+class CanalVendaBase(BaseModel):
+    nome:            str = Field(min_length=1)
+    taxa_percentual: float = Field(ge=0, lt=60, description="Comissão + taxa de pagamento do canal")
+    custo_extra_un:  float = Field(0, ge=0, description="Custo a mais por unidade nesse canal (ex.: embalagem de delivery)")
+    ordem:           int = 0
+
+
+class CanalVendaCreate(CanalVendaBase):
+    pass
+
+
+class CanalVendaUpdate(CanalVendaBase):
+    pass
+
+
+class CanalVenda(CanalVendaBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+
+
 # ───────────────────────── Configuração ─────────────────────────
 
 class ConfigPrecificacaoBase(BaseModel):
@@ -90,15 +119,8 @@ class ConfigPrecificacaoBase(BaseModel):
     horas_mes:            float = Field(120, gt=0, description="Horas trabalhadas na produção por mês")
     custos_fixos_mes:     float = Field(300, ge=0, description="Gás, luz, água, internet, DAS MEI, anúncios...")
     producao_mes:         int   = Field(2000, gt=0, description="Unidades produzidas por mês (média)")
-    lucro_percentual:     float = Field(15, ge=0, lt=100)
-    taxas_percentual:     float = Field(5, ge=0, lt=100, description="Maquininha, apps de entrega...")
+    lucro_percentual:     float = Field(15, ge=0, lt=80)
     desconto_cento_percentual: float = Field(10, ge=0, lt=100)
-
-    @model_validator(mode="after")
-    def validar_percentuais(self):
-        if self.lucro_percentual + self.taxas_percentual >= 90:
-            raise ValueError("Lucro + taxas precisa ser menor que 90%")
-        return self
 
 
 class ConfigPrecificacao(ConfigPrecificacaoBase):
@@ -131,6 +153,20 @@ class ItemCusto(BaseModel):
     custo:      float
 
 
+class PrecoCanal(BaseModel):
+    canal_id:             str
+    nome:                 str
+    taxa_percentual:      float
+    custo_extra_un:       float
+    custo_un:             float   # custo base + extra do canal
+    taxas_un:             float
+    lucro_un:             float
+    preco_sugerido_un:    float
+    preco_sugerido_cento: float
+    analise_unidade:      AnalisePrecoAtual
+    analise_cento:        AnalisePrecoAtual
+
+
 class ResultadoPreco(BaseModel):
     receita_id:            str
     nome:                  str
@@ -141,11 +177,6 @@ class ResultadoPreco(BaseModel):
     custo_insumos_un:      float
     mao_obra_un:           float
     custos_fixos_un:       float
-    custo_total_un:        float
-    lucro_un:              float
-    taxas_un:              float
-    preco_sugerido_un:     float
-    preco_sugerido_cento:  float
-    analise_unidade:       AnalisePrecoAtual
-    analise_cento:         AnalisePrecoAtual
+    custo_total_un:        float   # custo base, igual em todos os canais
+    canais:                list[PrecoCanal]
     alertas:               list[str]
