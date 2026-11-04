@@ -9,19 +9,22 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterModule } from '@angular/router';
 import { PrecificacaoService, mensagemErro } from '../../core/services/precificacao.service';
 import { Insumo, InsumoForm, UNIDADE_LABEL, UnidadeMedida } from '../../shared/models/precificacao.model';
-import { formatCurrency } from '../../shared/utils/format';
+import { formatCurrency, formatDate, formatNumber, formatPct } from '../../shared/utils/format';
+import { CompraService } from '../../core/services/compra.service';
+import { PontoHistorico } from '../../shared/models/compra.model';
 
 @Component({
   selector: 'app-insumos-tab',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatFormFieldModule,
-    MatInputModule, MatSelectModule, MatSnackBarModule, MatTooltipModule,
+    MatInputModule, MatSelectModule, MatSnackBarModule, MatTooltipModule, RouterModule,
   ],
   templateUrl: './insumos-tab.component.html',
-  styleUrl: './precificacao-shared.scss',
+  styleUrls: ['./precificacao-shared.scss', './insumos-tab.component.scss'],
 })
 export class InsumosTabComponent {
   readonly service = inject(PrecificacaoService);
@@ -31,6 +34,13 @@ export class InsumosTabComponent {
   readonly UNIDADE_LABEL = UNIDADE_LABEL;
   readonly unidades = Object.keys(UNIDADE_LABEL) as UnidadeMedida[];
   readonly formatCurrency = formatCurrency;
+  readonly formatDate = formatDate;
+  readonly formatNumber = formatNumber;
+  readonly formatPct = formatPct;
+  private compras = inject(CompraService);
+
+  historicoAberto: string | null = null;
+  historico: PontoHistorico[] = [];
 
   showForm = false;
   editandoId: string | null = null;
@@ -75,6 +85,16 @@ export class InsumosTabComponent {
         this.fecharForm();
       },
       error: (e: HttpErrorResponse) => { this.salvando = false; this.snack.open(mensagemErro(e), 'OK', { duration: 5000 }); },
+    });
+  }
+
+  alternarHistorico(i: Insumo) {
+    if (this.historicoAberto === i.id) { this.historicoAberto = null; return; }
+    this.historicoAberto = i.id;
+    this.historico = [];
+    this.compras.historico(i.id).subscribe({
+      next: h => this.historico = [...h].reverse(),  // mais recente primeiro
+      error: (e: HttpErrorResponse) => this.snack.open(mensagemErro(e), 'OK', { duration: 5000 }),
     });
   }
 

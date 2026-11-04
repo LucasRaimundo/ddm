@@ -1,19 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterModule } from '@angular/router';
 import { EncomendaService } from '../../core/services/encomenda.service';
 import { VendaService } from '../../core/services/venda.service';
+import { CompraService } from '../../core/services/compra.service';
 import { STATUS_LABEL, StatusEncomenda } from '../../shared/models/encomenda.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   readonly STATUS_LABEL = STATUS_LABEL;
   readonly PRODUTO_CORES = ['#D4537E','#FAC775','#854F0B','#e8ddd5'];
 
@@ -23,7 +25,28 @@ export class DashboardComponent {
   curMonth = new Date().getMonth();
   curYear  = new Date().getFullYear();
 
-  constructor(private encService: EncomendaService, private vendaService: VendaService) {}
+  /** Gasto com insumos no mês (vem da API). null = ainda carregando ou API fora do ar. */
+  gastosMes: number | null = null;
+
+  constructor(
+    private encService: EncomendaService,
+    private vendaService: VendaService,
+    private compraService: CompraService,
+  ) {}
+
+  ngOnInit() { this.carregarGastos(); }
+
+  private carregarGastos() {
+    this.gastosMes = null;
+    this.compraService.resumoDoMes(this.curMonth + 1, this.curYear).subscribe({
+      next: r => this.gastosMes = r.total,
+      error: () => this.gastosMes = null,
+    });
+  }
+
+  get lucroMes(): number | null {
+    return this.gastosMes === null ? null : this.totalReceita - this.gastosMes;
+  }
 
   get monthLabel(): string { return `${this.months[this.curMonth]} ${this.curYear}`; }
   get encomendas() { return this.encService.getByMes(this.curYear, this.curMonth); }
@@ -90,6 +113,7 @@ export class DashboardComponent {
     this.curMonth += dir;
     if (this.curMonth < 0)  { this.curMonth = 11; this.curYear--; }
     if (this.curMonth > 11) { this.curMonth = 0;  this.curYear++; }
+    this.carregarGastos();
   }
 
   barHeight(val: number, max: number): number { return Math.round((val / max) * 110); }

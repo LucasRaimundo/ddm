@@ -12,6 +12,18 @@
       <div class="metric-badge badge-up"><mat-icon style="font-size:13px;width:13px;height:13px">trending_up</mat-icon> encomendas + unitárias</div>
     </div>
     <div class="metric-card">
+      <div class="metric-label">Gastos com insumos</div>
+      <div class="metric-value">{{ gastosMes === null ? '—' : formatCurrency(gastosMes) }}</div>
+      <a class="metric-badge badge-neutral" routerLink="/compras">ver compras</a>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Lucro do mês</div>
+      <div class="metric-value" [class.negativo]="lucroMes !== null && lucroMes < 0" [class.verde]="lucroMes !== null && lucroMes >= 0">
+        {{ lucroMes === null ? '—' : formatCurrency(lucroMes) }}
+      </div>
+      <div class="metric-badge" [class.badge-up]="(lucroMes ?? 0) >= 0" [class.badge-down]="(lucroMes ?? 0) < 0">receita − gastos</div>
+    </div>
+    <div class="metric-card">
       <div class="metric-label">Encomendas</div>
       <div class="metric-value">{{ encomendas.length }}</div>
       <div class="metric-badge badge-neutral">no mês</div>

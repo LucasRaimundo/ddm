@@ -1,9 +1,9 @@
 .month-nav { display: flex; align-items: center; gap: 8px; align-self: flex-end; }
 .month-label { font-family: sans-serif; font-size: 14px; font-weight: 500; color: var(--text-dark); min-width: 130px; text-align: center; }
-.metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
 .metric-card { background: #fff; border-radius: 12px; border: 0.5px solid var(--border); padding: 16px 18px; }
 .metric-label { font-family: sans-serif; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-.metric-value { font-size: 24px; font-weight: 500; color: var(--text-dark); line-height: 1; &.rosa { color: var(--rosa); } }
+.metric-value { font-size: 24px; font-weight: 500; color: var(--text-dark); line-height: 1; &.rosa { color: var(--rosa); } &.verde { color: #3B6D11; } &.negativo { color: #A32D2D; } }
 .metric-badge {
   display: inline-flex; align-items: center; gap: 3px;
   font-family: sans-serif; font-size: 11px; margin-top: 8px; padding: 2px 8px; border-radius: 20px;
@@ -43,3 +43,4 @@
   &.entregue   { background: #eaf3de; color: #3B6D11; }
 }
 .empty-state { font-family: sans-serif; font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0; }
+a.metric-badge { text-decoration: none; }

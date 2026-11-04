@@ -27,6 +27,8 @@ export interface Insumo extends InsumoForm {
   id: string;
   created_at?: string;
   updated_at?: string;
+  ultima_compra?: string | null;
+  variacao_pct?: number | null;
 }
 
 export interface ReceitaItem {

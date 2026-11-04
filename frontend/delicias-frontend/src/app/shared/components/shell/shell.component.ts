@@ -11,6 +11,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/encomendas': { title: 'Encomendas',       subtitle: 'Cadastro e gestão de encomendas' },
   '/vendas':     { title: 'Vendas Unitárias', subtitle: 'Vendas avulsas no trabalho' },
   '/precificacao': { title: 'Precificação',  subtitle: 'Quanto cobrar para pagar tudo e ainda lucrar' },
+  '/compras':      { title: 'Compras',       subtitle: 'O que você gastou com ingredientes e embalagens' },
 };
 
 @Component({

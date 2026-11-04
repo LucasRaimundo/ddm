@@ -39,6 +39,8 @@ class Insumo(InsumoBase):
     id:         str
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+    ultima_compra: Optional[str] = None     # data da compra mais recente
+    variacao_pct:  Optional[float] = None   # preço da última compra vs a anterior
 
 
 # ───────────────────────── Receitas ─────────────────────────

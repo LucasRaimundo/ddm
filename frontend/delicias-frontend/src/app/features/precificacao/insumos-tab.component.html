@@ -1,8 +1,9 @@
 <div class="page-header">
   <p class="intro">
     Cadastre tudo o que você compra: ingredientes <strong>e embalagens</strong> (forminha, caixa, fita).
-    Informe o preço que pagou e quanto veio na embalagem. Quando o preço mudar no mercado, é só
-    atualizar aqui que todos os preços se recalculam.
+    Informe o preço que pagou e quanto veio na embalagem. Depois disso, é só
+    <a routerLink="/compras">registrar as compras</a>: o preço de cada insumo passa a ser o da
+    última compra e todos os preços se recalculam sozinhos.
   </p>
   <button mat-raised-button class="btn-nova" (click)="abrirForm()">
     <mat-icon>add</mat-icon> Novo insumo
@@ -61,20 +62,54 @@
   </div>
   <table *ngIf="service.insumos().length > 0" class="data-table">
     <thead>
-      <tr><th>Insumo</th><th>Tipo</th><th>Embalagem</th><th>Preço pago</th><th>Custo por medida</th><th></th></tr>
+      <tr><th>Insumo</th><th>Tipo</th><th>Embalagem</th><th>Preço atual</th><th>Custo por medida</th><th>Última compra</th><th></th></tr>
     </thead>
     <tbody>
-      <tr *ngFor="let i of service.insumos()">
+      <ng-container *ngFor="let i of service.insumos()">
+      <tr>
         <td class="td-nome">{{ i.nome }}</td>
         <td><span class="tag" [class.embalagem]="i.categoria === 'embalagem'">{{ i.categoria }}</span></td>
         <td>{{ i.quantidade_embalagem }} {{ i.unidade }}</td>
         <td>{{ formatCurrency(i.preco_embalagem) }}</td>
         <td class="td-valor">{{ formatCurrency(custoPorMedida(i), 4) }} / {{ i.unidade }}</td>
+        <td class="td-compra">
+          <ng-container *ngIf="i.ultima_compra; else semCompra">
+            {{ formatDate(i.ultima_compra) }}
+            <span class="var" *ngIf="i.variacao_pct" [class.sobe]="i.variacao_pct > 0" [class.desce]="i.variacao_pct < 0"
+                  matTooltip="Em relação à compra anterior">{{ formatPct(i.variacao_pct) }}</span>
+          </ng-container>
+          <ng-template #semCompra><span class="sem-compra">preço manual</span></ng-template>
+        </td>
         <td class="td-actions">
+          <button mat-icon-button matTooltip="Histórico de preços" (click)="alternarHistorico(i)" [disabled]="!i.ultima_compra">
+            <mat-icon>{{ historicoAberto === i.id ? 'expand_less' : 'history' }}</mat-icon>
+          </button>
           <button mat-icon-button matTooltip="Editar" (click)="abrirForm(i)"><mat-icon>edit</mat-icon></button>
           <button mat-icon-button matTooltip="Excluir" class="btn-delete" (click)="excluir(i)"><mat-icon>delete_outline</mat-icon></button>
         </td>
       </tr>
+      <tr *ngIf="historicoAberto === i.id" class="linha-historico">
+        <td colspan="7">
+          <div class="historico">
+            <div class="historico-titulo">Histórico de compras · {{ i.nome }}</div>
+            <table>
+              <thead><tr><th>Data</th><th>Local</th><th>Comprou</th><th>Pagou</th><th>Por embalagem</th><th>Por {{ i.unidade }}</th><th>Variação</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let h of historico">
+                  <td>{{ formatDate(h.data_compra) }}</td>
+                  <td>{{ h.local || '—' }}</td>
+                  <td>{{ formatNumber(h.quantidade, 2) }} × {{ formatNumber(h.tamanho_embalagem, 1) }} {{ i.unidade }}</td>
+                  <td>{{ formatCurrency(h.valor_total) }}</td>
+                  <td>{{ formatCurrency(h.preco_embalagem) }}</td>
+                  <td>{{ formatCurrency(h.preco_por_medida, 4) }}</td>
+                  <td><span class="var" *ngIf="h.variacao_pct !== null" [class.sobe]="h.variacao_pct > 0" [class.desce]="h.variacao_pct < 0">{{ h.variacao_pct === 0 ? 'igual' : formatPct(h.variacao_pct) }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </td>
+      </tr>
+      </ng-container>
     </tbody>
   </table>
 </div>

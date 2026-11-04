@@ -21,6 +21,7 @@ class _Query:
     def eq(self, k, v): self.filtros.append(lambda r: r.get(k) == v); return self
     def gte(self, k, v): self.filtros.append(lambda r: r[k] >= v); return self
     def lt(self, k, v): self.filtros.append(lambda r: r[k] < v); return self
+    def in_(self, k, vs): vs = set(vs); self.filtros.append(lambda r: r.get(k) in vs); return self
     def insert(self, d): self.op, self.dados = "insert", d; return self
     def update(self, d): self.op, self.dados = "update", d; return self
     def upsert(self, d): self.op, self.dados = "upsert", d; return self

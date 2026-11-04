@@ -7,7 +7,11 @@ TABLE = "insumos"
 
 
 def listar() -> list:
-    return get_supabase().table(TABLE).select("*").order("nome").execute().data
+    from app.services.compra_service import ultimas_por_insumo  # evita import circular
+
+    insumos = get_supabase().table(TABLE).select("*").order("nome").execute().data
+    extras = ultimas_por_insumo()
+    return [{**i, **extras.get(i["id"], {})} for i in insumos]
 
 
 def buscar(id: str) -> dict:
@@ -35,5 +39,11 @@ def excluir(id: str) -> None:
         raise HTTPException(
             status_code=409,
             detail=f"Insumo usado em {len(usos)} receita(s). Remova das receitas antes de excluir.",
+        )
+    compras = db.table("compra_itens").select("compra_id").eq("insumo_id", id).execute().data
+    if compras:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Insumo aparece em {len(compras)} compra(s) registrada(s) e não pode ser excluído.",
         )
     db.table(TABLE).delete().eq("id", id).execute()

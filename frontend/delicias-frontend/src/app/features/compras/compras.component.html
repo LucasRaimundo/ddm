@@ -1,0 +1,143 @@
+<div class="page-container">
+  <div class="aviso erro" *ngIf="service.erro() as erro">
+    <mat-icon>cloud_off</mat-icon><span>{{ erro }}</span>
+    <button mat-button (click)="carregar()">Tentar de novo</button>
+  </div>
+
+  <div class="page-header">
+    <div class="month-nav">
+      <button mat-icon-button (click)="changeMonth(-1)"><mat-icon>chevron_left</mat-icon></button>
+      <span class="month-label">{{ monthLabel }}</span>
+      <button mat-icon-button (click)="changeMonth(1)"><mat-icon>chevron_right</mat-icon></button>
+    </div>
+    <button mat-raised-button class="btn-nova" (click)="abrirForm()" [disabled]="precificacao.insumos().length === 0">
+      <mat-icon>add_shopping_cart</mat-icon> Registrar compra
+    </button>
+  </div>
+
+  <div class="card aviso-vazio" *ngIf="precificacao.insumos().length === 0 && !precificacao.carregando()">
+    Para registrar compras, primeiro cadastre os insumos (ingredientes e embalagens).
+    <a mat-button routerLink="/precificacao">Ir para precificação →</a>
+  </div>
+
+  <!-- Formulário -->
+  <div class="card" *ngIf="showForm">
+    <div class="card-title">{{ editandoId ? 'Editar compra' : 'Nova compra' }}</div>
+    <div class="card-sub">Uma compra = uma ida ao mercado (uma nota). Coloque todos os itens dela.</div>
+    <form [formGroup]="form" (ngSubmit)="salvar()">
+      <div class="linha-topo">
+        <mat-form-field appearance="outline">
+          <mat-label>Data</mat-label>
+          <input matInput [matDatepicker]="dp" formControlName="data_compra">
+          <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
+          <mat-datepicker #dp></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Onde comprou (opcional)</mat-label>
+          <input matInput formControlName="local" placeholder="Ex: Atacadão">
+        </mat-form-field>
+      </div>
+
+      <div class="item" *ngFor="let l of itens.controls; let idx = index" [formGroup]="l">
+        <div class="item-campos">
+          <mat-form-field appearance="outline" class="f-insumo">
+            <mat-label>Insumo</mat-label>
+            <mat-select formControlName="insumo_id">
+              <mat-option *ngFor="let ins of insumosDisponiveis(idx)" [value]="ins.id">{{ ins.nome }}</mat-option>
+            </mat-select>
+            <mat-error>Escolha o insumo</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="f-qtd">
+            <mat-label>Embalagens</mat-label>
+            <input matInput type="number" formControlName="quantidade" min="0">
+            <mat-hint>Latas, pacotes, caixas...</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="f-tam">
+            <mat-label>Cada uma tem</mat-label>
+            <input matInput type="number" formControlName="tamanho_embalagem" min="0">
+            <span matTextSuffix>{{ insumo(l.value.insumo_id)?.unidade }}</span>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="f-valor">
+            <mat-label>Valor pago (total)</mat-label>
+            <span matTextPrefix>R$&nbsp;</span>
+            <input matInput type="number" formControlName="valor_total" min="0" step="0.01">
+            <mat-error>Informe o valor</mat-error>
+          </mat-form-field>
+          <button mat-icon-button type="button" class="btn-delete" matTooltip="Remover item"
+                  (click)="removerItem(idx)" [disabled]="itens.length === 1">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <div class="item-info" *ngIf="precoEmbalagem(l) as pe">
+          {{ formatCurrency(pe) }} cada embalagem
+          <ng-container *ngIf="variacao(l) as v">
+            <span class="var" [class.sobe]="v > 0" [class.desce]="v < 0">
+              <mat-icon>{{ v > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+              {{ formatPct(v) }} em relação ao preço atual
+            </span>
+          </ng-container>
+          <span class="var" *ngIf="variacao(l) === 0">mesmo preço de antes</span>
+        </div>
+      </div>
+
+      <button mat-button type="button" (click)="adicionarItem()"
+              [disabled]="itens.length >= precificacao.insumos().length">
+        <mat-icon>add</mat-icon> Adicionar item
+      </button>
+
+      <mat-form-field appearance="outline" class="obs">
+        <mat-label>Observações</mat-label>
+        <textarea matInput formControlName="observacoes" rows="2"></textarea>
+      </mat-form-field>
+
+      <div class="rodape-form">
+        <div class="total-form">Total da compra: <strong>{{ formatCurrency(totalForm) }}</strong></div>
+        <div class="acoes">
+          <button mat-button type="button" (click)="fecharForm()">Cancelar</button>
+          <button mat-raised-button class="btn-nova" type="submit" [disabled]="salvando">
+            {{ editandoId ? 'Salvar' : 'Registrar' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Resumo do mês -->
+  <div class="resumo" *ngIf="service.resumo() as r">
+    <div class="metric-card">
+      <div class="metric-label">Gasto com insumos</div>
+      <div class="metric-value rosa">{{ formatCurrency(r.total) }}</div>
+      <div class="metric-sub">{{ r.quantidade }} compra{{ r.quantidade === 1 ? '' : 's' }} no mês</div>
+    </div>
+    <div class="card onde-foi" *ngIf="r.por_insumo.length">
+      <div class="card-title">Onde foi o dinheiro</div>
+      <div class="gasto" *ngFor="let g of r.por_insumo.slice(0, 5)">
+        <span class="gasto-nome">{{ g.nome }}</span>
+        <div class="gasto-barra"><div [style.width.%]="pctDoTotal(g.total)"></div></div>
+        <span class="gasto-valor">{{ formatCurrency(g.total) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <div class="card">
+    <div *ngIf="service.compras().length === 0 && !service.carregando()" class="empty-state">
+      Nenhuma compra em {{ monthLabel }}.
+    </div>
+    <table *ngIf="service.compras().length > 0" class="data-table">
+      <thead><tr><th>Data</th><th>Local</th><th>Itens</th><th>Total</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let c of service.compras()">
+          <td class="td-nome">{{ formatDate(c.data_compra) }}</td>
+          <td>{{ c.local || '—' }}</td>
+          <td class="td-itens">{{ resumoItens(c) }}</td>
+          <td class="td-valor">{{ formatCurrency(c.valor_total) }}</td>
+          <td class="td-actions">
+            <button mat-icon-button matTooltip="Editar" (click)="abrirForm(c)"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button matTooltip="Excluir" class="btn-delete" (click)="excluir(c)"><mat-icon>delete_outline</mat-icon></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
