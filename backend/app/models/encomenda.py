@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import Optional
 from datetime import date
 from enum import Enum
@@ -22,12 +22,18 @@ STATUS_TRANSITIONS: dict[StatusEncomenda, list[StatusEncomenda]] = {
 
 
 class EncomendaBase(BaseModel):
-    nome_cliente:   str
-    tipo_encomenda: str
-    valor:          float
+    nome_cliente:   str = Field(min_length=1)
+    tipo_encomenda: str = Field(min_length=1)
+    valor:          float = Field(gt=0)
     data_pedido:    date
     data_entrega:   date
     observacoes:    Optional[str] = None
+
+    @model_validator(mode="after")
+    def validar_datas(self):
+        if self.data_entrega < self.data_pedido:
+            raise ValueError("data_entrega não pode ser anterior a data_pedido")
+        return self
 
 
 class EncomendaCreate(EncomendaBase):
@@ -43,9 +49,8 @@ class EncomendaStatusUpdate(BaseModel):
 
 
 class Encomenda(EncomendaBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id:         str
     status:     StatusEncomenda
     created_at: Optional[str] = None
-
-    class Config:
-        from_attributes = True

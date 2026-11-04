@@ -1,6 +1,8 @@
+from fastapi import HTTPException
+
 from app.core.database import get_supabase
 from app.models.venda import VendaCreate, VendaUpdate
-from fastapi import HTTPException
+from app.services.filtros import intervalo_mes
 
 
 TABLE = "vendas_unitarias"
@@ -11,11 +13,7 @@ def listar(mes: int | None = None, ano: int | None = None) -> list:
     query = db.table(TABLE).select("*")
 
     if mes and ano:
-        inicio = f"{ano}-{mes:02d}-01"
-        if mes == 12:
-            fim = f"{ano + 1}-01-01"
-        else:
-            fim = f"{ano}-{mes + 1:02d}-01"
+        inicio, fim = intervalo_mes(mes, ano)
         query = query.gte("data_venda", inicio).lt("data_venda", fim)
 
     resultado = query.order("created_at", desc=True).execute()
@@ -24,28 +22,28 @@ def listar(mes: int | None = None, ano: int | None = None) -> list:
 
 def buscar(id: str) -> dict:
     db = get_supabase()
-    resultado = db.table(TABLE).select("*").eq("id", id).single().execute()
+    resultado = db.table(TABLE).select("*").eq("id", id).limit(1).execute()
     if not resultado.data:
         raise HTTPException(status_code=404, detail="Venda não encontrada")
-    return resultado.data
+    return resultado.data[0]
+
+
+def _payload(dados: VendaCreate | VendaUpdate) -> dict:
+    payload = dados.model_dump(mode="json")
+    payload["valor_total"] = round(payload["quantidade"] * payload["valor_unit"], 2)
+    return payload
 
 
 def criar(dados: VendaCreate) -> dict:
     db = get_supabase()
-    payload = dados.model_dump()
-    payload["data_venda"]   = str(payload["data_venda"])
-    payload["valor_total"]  = payload["quantidade"] * payload["valor_unit"]
-    resultado = db.table(TABLE).insert(payload).execute()
+    resultado = db.table(TABLE).insert(_payload(dados)).execute()
     return resultado.data[0]
 
 
 def atualizar(id: str, dados: VendaUpdate) -> dict:
     buscar(id)  # garante que existe
     db = get_supabase()
-    payload = dados.model_dump()
-    payload["data_venda"]  = str(payload["data_venda"])
-    payload["valor_total"] = payload["quantidade"] * payload["valor_unit"]
-    resultado = db.table(TABLE).update(payload).eq("id", id).execute()
+    resultado = db.table(TABLE).update(_payload(dados)).eq("id", id).execute()
     return resultado.data[0]
 
 
