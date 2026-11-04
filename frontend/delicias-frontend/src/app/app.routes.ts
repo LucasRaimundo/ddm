@@ -23,6 +23,10 @@ export const routes: Routes = [
         path: 'vendas',
         loadComponent: () => import('./features/vendas/vendas.component').then(m => m.VendasComponent)
       },
+      {
+        path: 'precificacao',
+        loadComponent: () => import('./features/precificacao/precificacao.component').then(m => m.PrecificacaoComponent)
+      },
     ]
   },
   { path: '**', redirectTo: '' }

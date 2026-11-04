@@ -1,0 +1,80 @@
+<div class="page-header">
+  <p class="intro">
+    Cadastre tudo o que você compra: ingredientes <strong>e embalagens</strong> (forminha, caixa, fita).
+    Informe o preço que pagou e quanto veio na embalagem. Quando o preço mudar no mercado, é só
+    atualizar aqui que todos os preços se recalculam.
+  </p>
+  <button mat-raised-button class="btn-nova" (click)="abrirForm()">
+    <mat-icon>add</mat-icon> Novo insumo
+  </button>
+</div>
+
+<div class="card" *ngIf="showForm">
+  <div class="card-title">{{ editandoId ? 'Editar insumo' : 'Novo insumo' }}</div>
+  <div class="card-sub">Ex.: Leite condensado · R$ 7,00 · 395 g</div>
+  <form [formGroup]="form" (ngSubmit)="salvar()" class="form-grid">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nome</mat-label>
+      <input matInput formControlName="nome" placeholder="Ex: Leite condensado Moça">
+      <mat-error>Obrigatório</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo</mat-label>
+      <mat-select formControlName="categoria">
+        <mat-option value="ingrediente">Ingrediente</mat-option>
+        <mat-option value="embalagem">Embalagem</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Medido em</mat-label>
+      <mat-select formControlName="unidade">
+        <mat-option *ngFor="let u of unidades" [value]="u">{{ UNIDADE_LABEL[u] }}</mat-option>
+      </mat-select>
+      <mat-hint>Comprou em kg? Use gramas: 1 kg = 1000 g</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Preço pago (R$)</mat-label>
+      <input matInput type="number" formControlName="preco_embalagem" min="0" step="0.01">
+      <mat-error>Informe o preço</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Quantidade na embalagem</mat-label>
+      <input matInput type="number" formControlName="quantidade_embalagem" min="0">
+      <span matTextSuffix>{{ unidadeAtual }}</span>
+      <mat-error>Informe a quantidade</mat-error>
+    </mat-form-field>
+    <div class="preview" *ngIf="custoPreview as c">
+      Custa <strong>{{ formatCurrency(c, 4) }}</strong> por {{ unidadeAtual }}
+    </div>
+    <div class="form-actions">
+      <button mat-button type="button" (click)="fecharForm()">Cancelar</button>
+      <button mat-raised-button class="btn-nova" type="submit" [disabled]="salvando">
+        {{ editandoId ? 'Salvar' : 'Cadastrar' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div *ngIf="service.insumos().length === 0" class="empty-state">
+    Nenhum insumo ainda.<br>Comece pelos ingredientes da sua receita mais vendida.
+  </div>
+  <table *ngIf="service.insumos().length > 0" class="data-table">
+    <thead>
+      <tr><th>Insumo</th><th>Tipo</th><th>Embalagem</th><th>Preço pago</th><th>Custo por medida</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let i of service.insumos()">
+        <td class="td-nome">{{ i.nome }}</td>
+        <td><span class="tag" [class.embalagem]="i.categoria === 'embalagem'">{{ i.categoria }}</span></td>
+        <td>{{ i.quantidade_embalagem }} {{ i.unidade }}</td>
+        <td>{{ formatCurrency(i.preco_embalagem) }}</td>
+        <td class="td-valor">{{ formatCurrency(custoPorMedida(i), 4) }} / {{ i.unidade }}</td>
+        <td class="td-actions">
+          <button mat-icon-button matTooltip="Editar" (click)="abrirForm(i)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button matTooltip="Excluir" class="btn-delete" (click)="excluir(i)"><mat-icon>delete_outline</mat-icon></button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

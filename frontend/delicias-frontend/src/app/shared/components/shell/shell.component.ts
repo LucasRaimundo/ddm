@@ -10,6 +10,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/kanban':     { title: 'Kanban',           subtitle: 'Andamento das encomendas' },
   '/encomendas': { title: 'Encomendas',       subtitle: 'Cadastro e gestão de encomendas' },
   '/vendas':     { title: 'Vendas Unitárias', subtitle: 'Vendas avulsas no trabalho' },
+  '/precificacao': { title: 'Precificação',  subtitle: 'Quanto cobrar para pagar tudo e ainda lucrar' },
 };
 
 @Component({

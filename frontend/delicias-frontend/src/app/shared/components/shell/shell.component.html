@@ -31,6 +31,11 @@
         <mat-icon>shopping_bag</mat-icon>
         <span class="nav-label">Venda unitária</span>
       </a>
+      <div class="nav-section" *ngIf="!sidebarCollapsed">Gestão</div>
+      <a class="nav-item" routerLink="/precificacao" routerLinkActive="active" matRipple>
+        <mat-icon>calculate</mat-icon>
+        <span class="nav-label">Precificação</span>
+      </a>
     </nav>
   </aside>
 

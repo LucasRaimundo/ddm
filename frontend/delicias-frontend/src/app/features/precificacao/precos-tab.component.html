@@ -1,0 +1,75 @@
+<div *ngIf="!service.carregando() && service.precos().length === 0" class="card empty-state">
+  Ainda não há receitas para precificar.<br>
+  Siga os passos: <strong>1.</strong> Configuração → <strong>2.</strong> Insumos → <strong>3.</strong> Receitas.
+  <div><button mat-button (click)="irPara.emit(3)">Começar pela configuração →</button></div>
+</div>
+
+<div class="card preco-card" *ngFor="let p of service.precos()">
+  <div class="topo">
+    <div>
+      <div class="nome">{{ p.nome }}</div>
+      <div class="card-sub">
+        Rende {{ p.rendimento }} · {{ formatNumber(p.unidades_aproveitadas, 1) }} aproveitadas após perdas
+      </div>
+    </div>
+    <div class="sugeridos">
+      <div class="sugerido">
+        <span class="rotulo">Unidade</span>
+        <span class="valor">{{ formatCurrency(p.preco_sugerido_un) }}</span>
+      </div>
+      <div class="sugerido">
+        <span class="rotulo">Cento</span>
+        <span class="valor">{{ formatCurrency(p.preco_sugerido_cento) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Composição do preço da unidade -->
+  <div class="composicao">
+    <div class="barra">
+      <div *ngFor="let f of fatias(p)" class="fatia {{ f.classe }}"
+           [style.width.%]="pct(f.valor, p)"
+           [matTooltip]="f.label + ': ' + formatCurrency(f.valor)"></div>
+    </div>
+    <div class="legenda">
+      <span *ngFor="let f of fatias(p)" class="leg">
+        <i class="dot {{ f.classe }}"></i>{{ f.label }} <strong>{{ formatCurrency(f.valor) }}</strong>
+      </span>
+    </div>
+    <div class="custo-total">Custo total por unidade: <strong>{{ formatCurrency(p.custo_total_un) }}</strong></div>
+  </div>
+
+  <!-- Comparação com o preço atual -->
+  <div class="comparacao">
+    <div class="analise {{ a.analise.status }}" *ngFor="let a of [
+      { titulo: 'Unidade', analise: p.analise_unidade },
+      { titulo: 'Cento',   analise: p.analise_cento }
+    ]">
+      <div class="analise-topo">
+        <span class="analise-titulo">{{ a.titulo }} · você cobra {{ formatCurrency(a.analise.preco_atual) }}</span>
+        <span class="pill">{{ STATUS_PRECO_LABEL[a.analise.status] }}</span>
+      </div>
+      <div class="analise-msg">{{ mensagem(a.analise) }}</div>
+    </div>
+  </div>
+
+  <ul class="alertas" *ngIf="p.alertas.length">
+    <li *ngFor="let al of p.alertas"><mat-icon>warning_amber</mat-icon>{{ al }}</li>
+  </ul>
+
+  <button mat-button class="detalhes-btn" (click)="alternar(p.receita_id)">
+    <mat-icon>{{ abertos.has(p.receita_id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+    {{ abertos.has(p.receita_id) ? 'Esconder' : 'Ver' }} ficha técnica
+  </button>
+  <table class="data-table" *ngIf="abertos.has(p.receita_id)">
+    <thead><tr><th>Insumo</th><th>Quantidade</th><th>Custo na receita</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let i of p.itens">
+        <td class="td-nome">{{ i.nome }}</td>
+        <td>{{ i.quantidade }} {{ i.unidade }}</td>
+        <td>{{ formatCurrency(i.custo) }}</td>
+      </tr>
+      <tr><td class="td-nome">Total</td><td></td><td class="td-valor">{{ formatCurrency(p.custo_insumos_receita) }}</td></tr>
+    </tbody>
+  </table>
+</div>

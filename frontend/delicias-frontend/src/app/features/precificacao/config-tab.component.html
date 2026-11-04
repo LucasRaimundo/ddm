@@ -1,0 +1,78 @@
+<form [formGroup]="form" (ngSubmit)="salvar()" class="blocos">
+  <div class="card">
+    <div class="card-title">1. Seu trabalho</div>
+    <div class="card-sub">Seu salário é custo, não lucro. Se não entrar no preço, você trabalha de graça.</div>
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Quanto quer ganhar por mês</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input matInput type="number" formControlName="salario_desejado" min="0">
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Horas por mês na produção</mat-label>
+        <input matInput type="number" formControlName="horas_mes" min="1">
+        <span matTextSuffix>h</span>
+        <mat-hint>Ex.: 6h/dia × 20 dias = 120h</mat-hint>
+      </mat-form-field>
+      <div class="preview">Sua hora vale <strong>{{ formatCurrency(valorHora) }}</strong></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">2. Custos fixos do mês</div>
+    <div class="card-sub">Gás, luz, água, internet, DAS do MEI, anúncios, manutenção de utensílios... some tudo.</div>
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Custos fixos por mês</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input matInput type="number" formControlName="custos_fixos_mes" min="0">
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Doces produzidos por mês</mat-label>
+        <input matInput type="number" formControlName="producao_mes" min="1">
+        <span matTextSuffix>un</span>
+        <mat-hint>Uma média; não precisa ser exato</mat-hint>
+      </mat-form-field>
+      <div class="preview">Cada doce carrega <strong>{{ formatCurrency(fixoPorUnidade) }}</strong> de custo fixo</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3. Lucro, taxas e desconto</div>
+    <div class="card-sub">O lucro é o dinheiro do negócio (reserva, equipamentos), separado do seu salário.</div>
+    <div class="form-grid tres">
+      <mat-form-field appearance="outline">
+        <mat-label>Lucro desejado</mat-label>
+        <input matInput type="number" formControlName="lucro_percentual" min="0">
+        <span matTextSuffix>%</span>
+        <mat-hint>Comum: 10 a 25%</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Taxas</mat-label>
+        <input matInput type="number" formControlName="taxas_percentual" min="0">
+        <span matTextSuffix>%</span>
+        <mat-hint>Maquininha, iFood...</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Desconto no cento</mat-label>
+        <input matInput type="number" formControlName="desconto_cento_percentual" min="0">
+        <span matTextSuffix>%</span>
+        <mat-hint>Sobre 100 × preço da unidade</mat-hint>
+      </mat-form-field>
+      <div class="preview" [class.alerta]="descontoComeLucro">
+        <ng-container *ngIf="!descontoComeLucro">
+          O preço é o custo ÷ <strong>{{ divisor.toFixed(2) }}</strong>. Assim lucro e taxas saem "de dentro" do preço.
+        </ng-container>
+        <ng-container *ngIf="descontoComeLucro">
+          ⚠️ O desconto do cento é igual ou maior que o lucro: no cento você só cobre o custo, ou perde dinheiro.
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="acoes">
+    <button mat-raised-button class="btn-nova" type="submit" [disabled]="salvando || form.pristine">
+      <mat-icon>save</mat-icon> Salvar configuração
+    </button>
+  </div>
+</form>

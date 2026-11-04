@@ -1,0 +1,35 @@
+<div class="page-container">
+  <div class="aviso erro" *ngIf="service.erro() as erro">
+    <mat-icon>cloud_off</mat-icon>
+    <span>{{ erro }}</span>
+    <button mat-button (click)="service.carregar()">Tentar de novo</button>
+  </div>
+
+  <div class="aviso" *ngIf="service.config() && !service.config()!.configurado">
+    <mat-icon>tips_and_updates</mat-icon>
+    <span>
+      <strong>Comece pela configuração:</strong> informe quanto você quer ganhar por mês e seus custos fixos.
+      Até lá, os preços usam valores de exemplo.
+    </span>
+    <button mat-button (click)="abaAtiva = 3">Configurar</button>
+  </div>
+
+  <mat-tab-group [(selectedIndex)]="abaAtiva" animationDuration="150ms" class="abas">
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon>sell</mat-icon>&nbsp;Preços</ng-template>
+      <app-precos-tab (irPara)="abaAtiva = $event" />
+    </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon>menu_book</mat-icon>&nbsp;Receitas</ng-template>
+      <app-receitas-tab (irPara)="abaAtiva = $event" />
+    </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon>inventory_2</mat-icon>&nbsp;Insumos</ng-template>
+      <app-insumos-tab />
+    </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon>tune</mat-icon>&nbsp;Configuração</ng-template>
+      <app-config-tab />
+    </mat-tab>
+  </mat-tab-group>
+</div>

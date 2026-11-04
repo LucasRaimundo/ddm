@@ -1,0 +1,122 @@
+<div class="page-header">
+  <p class="intro">
+    A ficha técnica de cada doce: quanto vai de cada insumo <strong>na receita inteira</strong>,
+    quantas unidades ela rende e quanto tempo você leva do começo ao fim (cozinhar, esfriar, enrolar, embalar).
+  </p>
+  <button mat-raised-button class="btn-nova" (click)="abrirForm()" [disabled]="service.insumos().length === 0">
+    <mat-icon>add</mat-icon> Nova receita
+  </button>
+</div>
+
+<div class="card aviso-vazio" *ngIf="service.insumos().length === 0">
+  Para montar uma receita, primeiro cadastre os insumos.
+  <button mat-button (click)="irPara.emit(2)">Ir para insumos →</button>
+</div>
+
+<div class="card" *ngIf="showForm">
+  <div class="card-title">{{ editandoId ? 'Editar receita' : 'Nova receita' }}</div>
+  <div class="card-sub">Ex.: Brigadeiro tradicional · rende 25 · 60 min</div>
+  <form [formGroup]="form" (ngSubmit)="salvar()" class="form-grid">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nome do doce</mat-label>
+      <input matInput formControlName="nome" placeholder="Ex: Brigadeiro tradicional">
+      <mat-error>Obrigatório</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Rendimento</mat-label>
+      <input matInput type="number" formControlName="rendimento" min="1">
+      <span matTextSuffix>unidades</span>
+      <mat-error>Quantas unidades a receita rende?</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Tempo de trabalho</mat-label>
+      <input matInput type="number" formControlName="tempo_preparo_min" min="0">
+      <span matTextSuffix>min</span>
+      <mat-hint>Do começo ao doce embalado</mat-hint>
+      <mat-error>Informe o tempo</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Perda</mat-label>
+      <input matInput type="number" formControlName="perda_percentual" min="0" max="99">
+      <span matTextSuffix>%</span>
+      <mat-hint>Doces que quebram, provas, sobras (5 a 10%)</mat-hint>
+    </mat-form-field>
+    <div></div>
+
+    <div class="full-width secao">
+      <div class="secao-titulo">Ingredientes e embalagens</div>
+      <div class="item-linha" *ngFor="let linha of itens.controls; let idx = index" [formGroup]="linha">
+        <mat-form-field appearance="outline" class="item-insumo">
+          <mat-label>Insumo</mat-label>
+          <mat-select formControlName="insumo_id">
+            <mat-option *ngFor="let ins of insumosDisponiveis(idx)" [value]="ins.id">{{ ins.nome }}</mat-option>
+          </mat-select>
+          <mat-error>Escolha o insumo</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="item-qtd">
+          <mat-label>Quantidade</mat-label>
+          <input matInput type="number" formControlName="quantidade" min="0">
+          <span matTextSuffix>{{ insumo(linha.value.insumo_id)?.unidade }}</span>
+        </mat-form-field>
+        <div class="item-custo">{{ formatCurrency(custoItem(linha)) }}</div>
+        <button mat-icon-button type="button" class="btn-delete" matTooltip="Remover" (click)="removerItem(idx)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <button mat-button type="button" (click)="adicionarItem()"
+              [disabled]="itens.length >= service.insumos().length">
+        <mat-icon>add</mat-icon> Adicionar insumo
+      </button>
+      <div class="preview">
+        Insumos da receita: <strong>{{ formatCurrency(custoTotalPreview) }}</strong>
+        <ng-container *ngIf="custoUnidadePreview as cu">
+          · por unidade: <strong>{{ formatCurrency(cu) }}</strong>
+        </ng-container>
+        <br><small>Mão de obra, custos fixos e lucro entram no cálculo final, na aba Preços.</small>
+      </div>
+    </div>
+
+    <div class="full-width secao-titulo">Quanto você cobra hoje? <small>(opcional — para comparar)</small></div>
+    <mat-form-field appearance="outline">
+      <mat-label>Preço atual da unidade</mat-label>
+      <span matTextPrefix>R$&nbsp;</span>
+      <input matInput type="number" formControlName="preco_venda_unidade" min="0" step="0.01">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Preço atual do cento</mat-label>
+      <span matTextPrefix>R$&nbsp;</span>
+      <input matInput type="number" formControlName="preco_venda_cento" min="0" step="0.01">
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Observações</mat-label>
+      <textarea matInput formControlName="observacoes" rows="2"></textarea>
+    </mat-form-field>
+    <div class="form-actions">
+      <button mat-button type="button" (click)="fecharForm()">Cancelar</button>
+      <button mat-raised-button class="btn-nova" type="submit" [disabled]="salvando">
+        {{ editandoId ? 'Salvar' : 'Cadastrar' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<div class="card" *ngIf="service.insumos().length > 0">
+  <div *ngIf="service.receitas().length === 0" class="empty-state">Nenhuma receita cadastrada ainda.</div>
+  <table *ngIf="service.receitas().length > 0" class="data-table">
+    <thead>
+      <tr><th>Receita</th><th>Rende</th><th>Tempo</th><th>Insumos</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of service.receitas()">
+        <td class="td-nome">{{ r.nome }}</td>
+        <td>{{ r.rendimento }} un</td>
+        <td>{{ r.tempo_preparo_min }} min</td>
+        <td class="td-insumos">{{ resumoItens(r) }}</td>
+        <td class="td-actions">
+          <button mat-icon-button matTooltip="Editar" (click)="abrirForm(r)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button matTooltip="Excluir" class="btn-delete" (click)="excluir(r)"><mat-icon>delete_outline</mat-icon></button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
